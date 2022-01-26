@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}
+Main page
+{% endblock %}
+{% block body %}
+<table style="position:absolute;left:30%;width:40%">
+
+    <tbody>
+    <tr>
+        <form>
+            <input type="submit" formaction="{% url 'statistic' %}"
+                   formmethod="post" value="Submit">
+
+            {% csrf_token %}
+            {{ city_name }}
+            {{ start_date }}
+            {{ end_date }}
+
+        </form>
+    </tr>
+    </tbody>
+</table>
+{% endblock %}

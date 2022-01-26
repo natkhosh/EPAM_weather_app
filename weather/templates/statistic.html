@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}
+View target
+{% endblock %}
+
+{% block body %}
+
+<table style="opacity:0.8;position:absolute;left:30%;width:40%">
+    <tbody>
+
+        <tr>
+            <td>
+                City:
+            </td>
+            <td>
+                {{ city_name }}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                First date:
+            </td>
+            <td>
+                {{ start_date }}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Last date:
+            </td>
+            <td>
+                {{ end_date }}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Minimum temperature:
+            </td>
+            <td>
+                {{ min_temp_per_period }} &degC
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Maximum temperature:
+            </td>
+            <td>
+                {{ max_temp_per_period }} &degC
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Average temperature:
+            </td>
+            <td>
+                {{ avg_temp_per_period }} &degC
+            </td>
+        </tr>
+        {% if time_period > delta %}
+            <tr>
+                <td>
+                    Average minimum temperature by years:
+                </td>
+                <td>
+                    {% for year in years_avg_min %}
+                        {{year.date_year}}:
+                        {{ year.min_temp__avg|floatformat }} &degC
+                    <br>
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Average maximum temperature by years:
+                </td>
+                <td>
+                    {% for year in years_avg_max %}
+
+                        {{year.date_year}}:
+                        {{ year.max_temp__avg|floatformat }} &degC
+                    <br>
+                    {% endfor %}
+                </td>
+            </tr>
+        {% endif %}
+        <tr>
+            <td>
+                Percent days with precipitation
+            </td>
+            <td>
+                {{ percent_days_of_precipitation }} %
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Two most common weather:
+            </td>
+            <td>
+                {% for weather in most_common_weather_per_period %}
+
+                    {{ weather.most_common_weather }}
+                <br>
+
+                {% endfor %}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Average wind speed
+            </td>
+            <td>
+                {{ avg_wind_speed }} ms
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Average wind direction
+            </td>
+            <td>
+                {{ avg_wind_direction }} &deg
+            </td>
+        </tr>
+
+        <button>
+            <a href="{% url 'main' %}">Main page</a>
+        </button>
+
+    </tbody>
+</table>
+
+{% endblock %}

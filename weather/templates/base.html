@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+          margin:5px;
+          text-align:center;
+          width:99%;
+          height:100%;
+        }
+        button, table, th, td {
+          border: 1px solid black;
+          border-collapse: collapse;
+          margin:5px;
+        }
+        th, td {
+          padding: 5px;
+          text-align: center;
+        }
+
+    </style>
+    <title>{% block title %}{% endblock %}</title>
+</head>
+<body>
+    <h1>Weather Statistic</h1>
+
+    {% block body %}
+    {% endblock %}
+    {% load static %}
+
+    <div style="opacity:0.5;position:absolute;left:70%;z-index: -1">
+        <img src="{% static 'wing.png' %}">
+    </div>
+
+</body>
+
+</html>
