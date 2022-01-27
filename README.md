@@ -1,4 +1,4 @@
-# EPAM Final project
+## EPAM Final project
 
 This repository is for all materials, which are required for EPAM Autumn 2020 Python Course.
 
