@@ -1,3 +1,7 @@
+# EPAM Final project
+
+This repository is for all materials, which are required for EPAM Autumn 2020 Python Course.
+
 #### Final project after educational course 'Python autumn 2021'.
 This is an educational project, that collects weather data and gets weather 
 statistics for selected city.
