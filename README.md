@@ -1,4 +1,4 @@
-#### Final project after educational course 'Python spring 2021'.
+#### Final project after educational course 'Python  2021'.
 This is an educational project, that collects weather data and gets weather 
 statistics for selected city.
 
