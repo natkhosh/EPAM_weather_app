@@ -5,51 +5,64 @@ import requests
 from django.db.models import Max, Min, Avg, Count
 from .models import City
 from datetime import datetime, timedelta
+from typing import List
 
 
 def checking_city_in_database(city_name):
-    """The function checks information about the requested
-    city in the database"""
+    """
+    Function checks information about the requested city in the database.
+    :param city_name: requested city name
+    :return: QuerySet of values of the requested city
+    """
     return City.objects.filter(city_name__startswith=city_name).values()
 
 
-def weather_data(request):
-    """The function getting request from client (requested city)
-        and collecting information in the next algorithm
-        1) Checking city in database. If the city is in the database - the
-         function checks relevance weather information. If not - getting
-          repeated request;
-        2) If the city isn't in database - function getting request;
-        3) If information about the requested city is relevant in the
-         database - client would get the weather from the database.
-        """
+def weather_data_update(request):
+    """
+    Function getting request (requested statistic) and collecting
+    information in the next algorithm:
+        1) Checking statistic in database. If the statistic is in the database,
+         the function checks relevance weather information. If not, save
+         data to database;
+        2) If the statistic isn't in database, function update database;
+        3) If information about the requested statistic is relevant in the
+         database, information would get the weather from the database.
+    :param request:
+        {"city_name": city_name,
+        "start_date": start_date,
+        "end_date": end_date}
+    """
     requested_city = request["form_city"]
     city_check = checking_city_in_database(requested_city)
-    requested_date = datetime.strptime(request["form_end_date"],
-                                       '%Y-%m-%d').date()
+    requested_date = datetime.strptime(
+        request["form_end_date"], '%Y-%m-%d').date()
 
     if not city_check:
-        initial_download(request)
-
-        # return render(request, "checker/city.html", result_dict)
-        print("Данные обновлены!")
+        download_data_batches(request)
 
     if requested_date > City.objects.filter(
             city_name__startswith=requested_city).last().date:
-
+        # the start date to upload data (last date from db + 1 day)
+        request_start_day = City.objects.filter(
+            city_name__startswith=requested_city).last().date \
+                            + timedelta(days=1)
         request_upd = {
             "form_city": requested_city,
-            "form_start_date": City.objects.filter(
-                city_name__startswith=requested_city).last().date,
+            "form_start_date": request_start_day,
             "form_end_date": request["form_end_date"]}
 
-        initial_download(request_upd)
+        download_data_batches(request_upd)
 
 
 def get_weather_from_api(request_data: dict):
+    """
+    Function getting data from external site.
+    :param request_data: dict - city, start date, end date
+    :return: response
+    """
     link = "https://api.worldweatheronline.com/premium/v1/past-weather.ashx"
-    #secret_key = 'de04e16261d442a18b2214346222201'
     secret_key = os.environ.get("API_KEY")
+
     payload = {
         "q": request_data["form_city"],
         "date": request_data["form_start_date"],
@@ -61,7 +74,11 @@ def get_weather_from_api(request_data: dict):
     return response
 
 
-def upload_data_to_base(data: dict):
+def upload_data_to_base(data):
+    """
+    Function getting response from site and upload data to database.
+    :param data: json response from site
+    """
     city_name = data["data"]["request"][0]["query"]
     for date in data["data"]["weather"]:
 
@@ -69,11 +86,9 @@ def upload_data_to_base(data: dict):
         day_record = City()
         day_record.id = f'{str(date["date"])}-{city_name}'
         day_record.city_name = city_name
-        day_record.date = str(date["date"])
 
+        day_record.date = str(date["date"])
         day_record.date_year = str(date["date"][:4])
-        # day_record.date_month = str(date["date"][5:7])
-        # day_record.date_day = str(date["date"][8:])
 
         day_record.avg_temp = date["avgtempC"]
         day_record.max_temp = date["maxtempC"]
@@ -85,7 +100,7 @@ def upload_data_to_base(data: dict):
         day_record.most_common_weather = find_most_common_weather(
             [time["weatherDesc"][0]["value"] for time in hourly])
 
-        day_record.wind_direction = calculate_average_wind_direction(
+        day_record.wind_direction = find_average_wind_direction(
             [int(time["winddirDegree"]) for time in hourly])
 
         day_record.wind_speed = sum(
@@ -94,37 +109,45 @@ def upload_data_to_base(data: dict):
         day_record.save()
 
 
-def initial_download(request):
+def download_data_batches(request: dict):
+    """
+    Function of downloading data in batches, in case of limiting the volume
+    of the downloaded site.
+    :param request: dict - city, start date, end date
+    """
+
     city = request["form_city"]
+    start_date = datetime.strptime(str(request["form_start_date"]), '%Y-%m-%d')
+    end_date = datetime.strptime(str(request["form_end_date"]), '%Y-%m-%d')
 
-    sd = str(request["form_start_date"])
-    ed = str(request["form_end_date"])
-    startdate = datetime.strptime(sd, '%Y-%m-%d')
-    enddate = datetime.strptime(ed, '%Y-%m-%d')
-
-    print(type(startdate))
-    if (enddate - startdate).days <= 35:
+    if (end_date - start_date).days <= 35:
         request = {"form_city": city,
-                   "form_start_date": startdate,
-                   "form_end_date": enddate}
+                   "form_start_date": start_date,
+                   "form_end_date": end_date}
         info_from_site = get_weather_from_api(request)
+
         upload_data_to_base(info_from_site.json())
-    elif (enddate - startdate).days > 35:
+    elif (end_date - start_date).days > 35:
         request = {"form_city": city,
-                   "form_start_date": startdate,
-                   "form_end_date": enddate}
-        while startdate < (enddate - timedelta(35)):
+                   "form_start_date": start_date,
+                   "form_end_date": end_date}
+        while start_date < (end_date - timedelta(35)):
             request = {"form_city": city,
-                       "form_start_date": startdate,
-                       "form_end_date": enddate}
+                       "form_start_date": start_date,
+                       "form_end_date": end_date}
             info_from_site = get_weather_from_api(request)
             upload_data_to_base(info_from_site.json())
-            startdate += timedelta(35)
+            start_date += timedelta(35)
         info_from_site = get_weather_from_api(request)
         upload_data_to_base(info_from_site.json())
 
 
-def data_calculation(request):
+def preparing_data_to_show(request) -> dict:
+    """
+    Function collects and accumulates data for placement on web pages
+    :param request: POST
+    :return: context: dictionary with data to be placed on web pages
+    """
     context = {}
 
     temp_start = datetime
@@ -140,7 +163,6 @@ def data_calculation(request):
         temp_end = datetime.strptime(end_date, '%Y-%m-%d').date()
     delta = timedelta(730)
     time_period = temp_end - temp_start
-    # days_period = time_period.days + 1
 
     context['time_period'] = time_period
     context['delta'] = delta
@@ -154,64 +176,74 @@ def data_calculation(request):
     context["start_date"] = data_to_show.first().date
     context["end_date"] = data_to_show.last().date
 
+    # 1) temperature characteristics:
+    # a) the absolute minimum for the period
     context["min_temp_per_period"] = data_to_show.aggregate(
         Min("min_temp"))["min_temp__min"]
-
+    # b) the average temperature
     context["avg_temp_per_period"] = round(data_to_show.aggregate(
         Avg("avg_temp"))["avg_temp__avg"], 1)
-
+    # c) the absolute maximum for the period
     context["max_temp_per_period"] = data_to_show.aggregate(
         Max("max_temp"))["max_temp__max"]
 
+    # d) if the period is more than 2 years:
+    # i) average maximum by the years
     context["years_avg_min"] = data_to_show.values("date_year").annotate(
         Avg("min_temp")).order_by("date_year")
-
+    # ii) average minimum by the years
     context["years_avg_max"] = data_to_show.values("date_year").annotate(
         Avg("max_temp")).order_by("date_year")
 
+    # 2) Precipitation information:
+    # a) the number of days with and without precipitation
+    #    for the period (in percents)
     days_without_precipitation = data_to_show.annotate(
         Count("precip_mm")).filter(precip_mm=0).count()
-
     context["percent_days_of_precipitation"] = 100 - round(
         days_without_precipitation /
         data_to_show.annotate(days=Count("precip_mm")).count() * 100)
-
-    # print(days_without_precipitation, context["percent_days_of_precipitation"])
-
+    # b) two most common types of precipitation for the  period
     context["most_common_weather_per_period"] = data_to_show.values(
         "most_common_weather"
     ).annotate(
         count=Count("most_common_weather")).order_by("-count")[:2]
 
+    # 3) Average wind speed and wind direction:
+    # a) Average wind
     context["avg_wind_speed"] = round(
-        data_to_show.aggregate(
-            Avg("wind_speed"
-                )
-        )["wind_speed__avg"])
+        data_to_show.aggregate(Avg("wind_speed"))["wind_speed__avg"])
+    # b) Average wind direction:
     wind_directions = [day.wind_direction for day in data_to_show]
-    context["avg_wind_direction_1"] = [day.wind_direction for day
-                                       in data_to_show]
-
     context["avg_wind_direction"] = round(
-        calculate_average_wind_direction(wind_directions)
-    )
+        find_average_wind_direction(wind_directions))
 
     return context
 
 
-def find_most_common_weather(descriptions):
-    d = defaultdict(int)
-    for value in descriptions:
-        d[value] += 1
-    result, _ = max(d.items(), key=lambda x: x[1])
-    return result
+def find_most_common_weather(common_weather: List[str]) -> str:
+    """
+    Function that calculates the most common weather.
+    :param common_weather: list of day common weather
+    :return: str: most common weather
+    """
+    accum_dict = defaultdict(int)
+    for value in common_weather:
+        accum_dict[value] += 1
+    result = max(accum_dict.items(), key=lambda x: x[1])
+    return result[0]
 
 
-def calculate_average_wind_direction(winds: list):
+def find_average_wind_direction(winds:  List[int]) -> int:
+    """
+    Function that calculates the average wind direction.
+    :param winds: list of day wind direction
+    :return: int: average wind direction in degrees
+    """
     sin_m = []
     cos_m = []
-    for i in range(len(winds)):
-        sin_m.append(math.sin(winds[i]*math.pi/180))
-        cos_m.append(math.cos(winds[i]*math.pi/180))
+    for direction in range(len(winds)):
+        sin_m.append(math.sin(winds[direction]*math.pi/180))
+        cos_m.append(math.cos(winds[direction]*math.pi/180))
     atan_rad = math.atan2(sum(sin_m)/len(winds), sum(cos_m)/len(winds))
     return round(atan_rad*180/math.pi)

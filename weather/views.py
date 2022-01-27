@@ -1,10 +1,8 @@
-from django.views.generic import View
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.shortcuts import render
 from weather.forms import CityForm, StartDateForm, EndDateForm
-from weather.models import City
-from weather.parser import data_calculation, weather_data
+from weather.parser import preparing_data_to_show, weather_data_update
 
 
 def get_data(request):
@@ -22,19 +20,16 @@ def get_data(request):
         "end_date": end_date})
 
 
-def city(request):
+def statistic(request):
     if request.method == "POST":
         city_name_form = CityForm(request.POST)
         start_date_form = StartDateForm(request.POST)
         end_date_form = EndDateForm(request.POST)
-        if city_name_form.is_valid() and \
-                start_date_form.is_valid() and \
-                end_date_form.is_valid():
-            weather_data(request.POST)
 
-            # info_from_site = get_weather_from_api(request)
-            # upload_data_to_base(info_from_site.json())
-            context = data_calculation(request)
+        if city_name_form.is_valid() and start_date_form.is_valid() and \
+                end_date_form.is_valid():
+            weather_data_update(request.POST)
+            context = preparing_data_to_show(request)
             return render(request, "statistic.html", context)
     else:
         city_name = CityForm()
@@ -45,3 +40,25 @@ def city(request):
             "start_date": start_date,
             "end_date": end_date
         }))
+
+
+def handler400(request, exception):
+    """
+    The server has not found anything matching the request.
+    """
+    return render(request, "400.html", status=400)
+
+
+def handler404(request, exception):
+    """
+    The request could not be understood by the server due to malformed syntax.
+    """
+    return render(request, "404.html", status=404)
+
+
+def handler500(request):
+    """
+    The server encountered an unexpected condition which prevented it from
+    fulfilling the request.
+    """
+    return render(request, "500.html")
