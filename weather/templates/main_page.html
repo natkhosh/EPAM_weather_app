@@ -3,13 +3,14 @@
 Main page
 {% endblock %}
 {% block body %}
-<table style="position:absolute;left:30%;width:40%">
+<table style="position:absolute;left:30%;width:40%;border: 2px solid lightgray">
 
     <tbody>
     <tr>
         <form>
             <input type="submit" formaction="{% url 'statistic' %}"
                    formmethod="post" value="Submit">
+            <h1> </h1>
 
             {% csrf_token %}
             {{ city_name }}

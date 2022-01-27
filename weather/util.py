@@ -1,11 +1,13 @@
 import math
 import os
 from collections import defaultdict
-import requests
-from django.db.models import Max, Min, Avg, Count
-from .models import City
 from datetime import datetime, timedelta
 from typing import List
+
+import requests
+from django.db.models import Avg, Count, Max, Min
+
+from .models import City
 
 
 def checking_city_in_database(city_name):
@@ -77,7 +79,7 @@ def get_weather_from_api(request_data: dict):
 def upload_data_to_base(data):
     """
     Function getting response from site and upload data to database.
-    :param data: json response from site
+    :param data: response from site in json
     """
     city_name = data["data"]["request"][0]["query"]
     for date in data["data"]["weather"]:

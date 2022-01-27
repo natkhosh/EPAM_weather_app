@@ -8,14 +8,22 @@
           width:99%;
           height:100%;
         }
-        button, table, th, td {
-          border: 1px solid grey;
+        table, th, td {
+          table-layout: fixed;
+          width: 100%;
           border-collapse: collapse;
-          margin:5px;
+          border: 2px solid lightgray;
         }
         th, td {
-          padding: 5px;
+          padding: 12px;
           text-align: center;
+        }
+        tbody td {
+            text-align: left;
+        }
+
+        tfoot th {
+            text-align: right;
         }
 
     </style>
@@ -28,8 +36,9 @@
     {% endblock %}
     {% load static %}
 
-    <div style="opacity:0.5;position:absolute;left:70%;z-index: -1">
+    <div style="opacity:0.4;position:absolute;left:70%;z-index: -1">
         <img src="{% static 'wing.png' %}">
+
     </div>
 
 </body>

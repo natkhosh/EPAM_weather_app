@@ -1,15 +1,14 @@
 from django.http import HttpResponseRedirect
-from django.urls import reverse
 from django.shortcuts import render
-from weather.forms import CityForm, StartDateForm, EndDateForm
-from weather.parser import preparing_data_to_show, weather_data_update
+from django.urls import reverse
+
+from weather.forms import CityForm, EndDateForm, StartDateForm
+from weather.util import preparing_data_to_show, weather_data_update
 
 
 def get_data(request):
     """
-    This function showing the main page of the website
-    :param request:
-    :return:
+    Function shows the main page of the website.
     """
     city_name = CityForm()
     start_date = StartDateForm()
@@ -21,6 +20,10 @@ def get_data(request):
 
 
 def statistic(request):
+    """
+    Function gives information about request city weather between
+    date_first and date_last.
+    """
     if request.method == "POST":
         city_name_form = CityForm(request.POST)
         start_date_form = StartDateForm(request.POST)
