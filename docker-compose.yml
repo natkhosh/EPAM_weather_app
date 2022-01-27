@@ -1,10 +1,12 @@
 version: '3.4'
 
 services:
-  epamweatherapp:
+  web:
     image: epamweatherapp
-    build:
-      context: .
-      dockerfile: ./Dockerfile
+    build: .
+    environment:
+       DBHOST: 'db'
+    command: sh -c "python manage.py migrate && python manage.py loaddata db.json -i && python manage.py runserver 0.0.0.0:8000"
+
     ports:
-      - 8000:8000
+      - "8000:8000"
