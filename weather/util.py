@@ -1,10 +1,10 @@
-import math
 import os
+import requests
+import math
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import List
 
-import requests
 from django.db.models import Avg, Count, Max, Min
 
 from .models import City
@@ -233,6 +233,7 @@ def find_most_common_weather(common_weather: List[str]) -> str:
     for value in common_weather:
         accum_dict[value] += 1
     result = max(accum_dict.items(), key=lambda x: x[1])
+
     return result[0]
 
 
@@ -248,4 +249,5 @@ def find_average_wind_direction(winds:  List[int]) -> int:
         sin_m.append(math.sin(winds[direction]*math.pi/180))
         cos_m.append(math.cos(winds[direction]*math.pi/180))
     atan_rad = math.atan2(sum(sin_m)/len(winds), sum(cos_m)/len(winds))
+
     return round(atan_rad*180/math.pi)

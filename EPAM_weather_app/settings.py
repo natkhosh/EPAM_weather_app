@@ -19,11 +19,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / "keys.env")
 
-# MEDIA_ROOT = os.path.join(BASE_DIR, 'weather/static')
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
 # SECRET_KEY =
 # 'django-insecure-r)1*$25t+p#-ey&ow*p8qytl2z5#g$k(k!ta(l+o0ds0te5z(a'
@@ -120,12 +115,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
-# STATIC_URL = 'static/'
+STATIC_URL = 'static/'
 
 STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR),
                            "EPAM_weather_app/weather/static")
 # STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
-STATIC_URL = 'static/'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
