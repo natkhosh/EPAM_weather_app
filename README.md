@@ -16,7 +16,7 @@ statistics for selected city.
 ###### Docker
 1. Download and install Docker 
 2. Download project
-3. un commands in terminal:
+3. Run commands in terminal:
 
        docker-compose build
        docker-compose up 
